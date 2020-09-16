@@ -7,14 +7,7 @@
     <div id="toolbar">
       <button
         @click="
-          $refs.chart.add({
-            id: +new Date(),
-            x: 10,
-            y: 10,
-            name: 'New',
-            type: 'operation',
-            approvers: [],
-          })
+        addNewNode
         "
       >
         Add(Double-click canvas)
@@ -154,6 +147,18 @@ export default {
         approvers: [],
       });
     },
+    addNewNode(){
+      let node = this.$refs.chart.add({
+            id: +new Date(),
+            x: 10,
+            y: 10,
+            name: 'New',
+            type: 'operation',
+            approvers: [],
+          })
+        this.handleEditNode(node)
+    },
+
     async handleChartSave(nodes, connections) {
       // axios.post(url, {nodes, connection}).then(resp => {
       //   this.nodes = resp.nodes;
@@ -172,10 +177,49 @@ export default {
     render: function (g, node, isSelected) {
       node.width = node.width || 120;
       node.height = node.height || 60;
-      let borderColor = isSelected ? "#666666" : "#bbbbbb";
-      if (node.type !== "start" && node.type !== "end") {
-        // title
-        if (node.id !== 3) {
+      let borderColor = isSelected ? "red" : "#bbbbbb";
+
+      if(["start","end"].includes(node.type)){
+          let body = g.append("rect").attr("class", "body");
+          body
+          .style("width", node.width + "px")
+          .style("fill", "white")
+          .style("stroke-width", "1px")
+          .attr("x", node.x)
+          .attr("y", node.y)
+          .classed(node.type, true)
+          .attr("rx", 30)
+          .style("height", roundTo20(node.height) + "px")
+          .attr("stroke", borderColor)
+
+          let text = node.name
+
+          let bodyTextY;
+          bodyTextY = node.y + 5 + roundTo20(node.height) / 2;
+          g.append("text")
+          .attr("x", node.x + node.width / 2)
+          .attr("y", bodyTextY)
+          .attr("class", "unselectable")
+          .attr("text-anchor", "middle")
+          .text(function () {
+            return text;
+          })
+          .each(function wrap() {
+            let self = d3.select(this),
+              textLength = self.node().getComputedTextLength(),
+              text = self.text();
+            while (textLength > node.width - 2 * 4 && text.length > 0) {
+              text = text.slice(0, -1);
+              self.text(text + "...");
+              textLength = self.node().getComputedTextLength();
+            }
+          });
+
+      }
+      if (node.type == "operation") {
+
+        // Panel Header
+
           g.append("rect")
             .attr("x", node.x)
             .attr("y", node.y)
@@ -199,79 +243,73 @@ export default {
                 self.text(text + "...");
                 textLength = self.node().getComputedTextLength();
               }
-            });
-        }
-      }
-      // body
-      if (node.id === 3) {
-        let body = g.append("ellipse").attr("class", "body");
-        body.attr("cx", node.x + node.width / 2);
-        body.attr("cy", node.y + node.height / 2);
-        body.attr("rx", node.width / 2);
-        body.attr("ry", node.height / 2);
-        body.style("fill", "white");
-        body.style("stroke-width", "1px");
-        body.classed(node.type, true);
-        body.attr("stroke", borderColor);
-      } else {
-        let body = g.append("rect").attr("class", "body");
-        body
+          })
+                  
+          // Panel Body
+
+          g.append("rect").attr("class", "body")        
           .style("width", node.width + "px")
           .style("fill", "white")
-          .style("stroke-width", "1px");
-        if (node.type !== "start" && node.type !== "end") {
-          body.attr("x", node.x).attr("y", node.y + 20);
-          body.style("height", roundTo20(node.height - 20) + "px");
-        } else {
-          body
+          .style("stroke-width", "1px")
+          .attr("x", node.x).attr("y", node.y + 20)
+          .style("height", roundTo20(node.height - 20) + "px")
+          .attr("stroke", borderColor)
+
+          let text = node.name   
+          let bodyTextY;
+
+          bodyTextY = node.y + 25 + roundTo20(node.height - 20) / 2;
+
+          g.append("text")
+          .attr("x", node.x + node.width / 2)
+          .attr("y", bodyTextY)
+          .attr("class", "unselectable")
+          .attr("text-anchor", "middle")
+          .text(function () {
+            return text;
+          })
+          .each(function wrap() {
+            let self = d3.select(this),
+              textLength = self.node().getComputedTextLength(),
+              text = self.text();
+            while (textLength > node.width - 2 * 4 && text.length > 0) {
+              text = text.slice(0, -1);
+              self.text(text + "...");
+              textLength = self.node().getComputedTextLength();
+            }
+          })
+
+      }
+      if (node.type == "condition") {
+
+          g.append("polygon")
             .attr("x", node.x)
             .attr("y", node.y)
-            .classed(node.type, true)
-            .attr("rx", 30);
-          body.style("height", roundTo20(node.height) + "px");
-        }
-        body.attr("stroke", borderColor);
-      }
+            .style("fill", "white")     // remove any fill colour
+            .attr("points", [node.x ,node.y + node.height/2, node.x + node.width/2,node.y, node.x + node.width ,node.y + node.height/2, node.x + node.width/2,node.y + node.height])
+            .attr("stroke", borderColor)
 
-      // body text
-      let text =
-        node.type === "start"
-          ? "Start"
-          : node.type === "end"
-          ? "End"
-          : !node.approvers || node.approvers.length === 0
-          ? "No approver"
-          : node.approvers.length > 1
-          ? `${node.approvers[0].name + "..."}`
-          : node.approvers[0].name;
-      let bodyTextY;
-      if (node.type !== "start" && node.type !== "end") {
-        if (node.id === 3) {
-          bodyTextY = node.y + 25;
-        } else {
-          bodyTextY = node.y + 25 + roundTo20(node.height - 20) / 2;
+          let bodyTextY = node.y + roundTo20(node.height + 10) / 2
+          
+          g.append("text")
+            .attr("x", node.x + node.width/2)
+            .attr("y", bodyTextY)
+            .attr("text-anchor", "middle")
+            .attr("class", "unselectable")
+            .text(() => node.name)
+            .each(function wrap() {
+              let self = d3.select(this),
+                textLength = self.node().getComputedTextLength(),
+                text = self.text();
+              while (textLength > node.width - 2 * 4 && text.length > 0) {
+                text = text.slice(0, -1);
+                self.text(text + "...");
+                textLength = self.node().getComputedTextLength();
+              }
+            });
         }
-      } else {
-        bodyTextY = node.y + 5 + roundTo20(node.height) / 2;
-      }
-      g.append("text")
-        .attr("x", node.x + node.width / 2)
-        .attr("y", bodyTextY)
-        .attr("class", "unselectable")
-        .attr("text-anchor", "middle")
-        .text(function () {
-          return text;
-        })
-        .each(function wrap() {
-          let self = d3.select(this),
-            textLength = self.node().getComputedTextLength(),
-            text = self.text();
-          while (textLength > node.width - 2 * 4 && text.length > 0) {
-            text = text.slice(0, -1);
-            self.text(text + "...");
-            textLength = self.node().getComputedTextLength();
-          }
-        });
+      
+      
     },
   },
 };
@@ -297,5 +335,6 @@ export default {
 .container {
   width: 800px;
   margin: auto;
+  
 }
 </style>

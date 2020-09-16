@@ -10,7 +10,7 @@
                 <label for="type">Type</label>
                 <select class="form-control" id="type" v-model="nodeForm.type">
                     <option :key="'node-type-' + item.id" :value="item.id"
-                            v-for="item in [ { name: 'Start', id: 'start' }, { name: 'End', id: 'end' }, { name: 'Operation', id: 'operation' } ]"
+                            v-for="item in [ { name: 'Start', id: 'start' }, { name: 'End', id: 'end' }, { name: 'Operation', id: 'operation' }, { name: 'Condition', id: 'condition' } ]"
                     >
                         {{item.name}}
                     </option>

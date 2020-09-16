@@ -22,7 +22,7 @@
 }
 
 .unselectable {
-    moz-user-select: -moz-none;
+    -moz-user-select: -moz-none;
     -moz-user-select: none;
     -o-user-select: none;
     -khtml-user-select: none;
@@ -48,7 +48,7 @@
 }
 
 #svg .selection {
-    stroke: lightblue;
+    stroke: red;
     fill: lightblue;
     fill-opacity: 0.8;
     display: none;
@@ -56,4 +56,5 @@
 
 #svg .selection.active {
     display: block;
+    background:red;
 }

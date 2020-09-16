@@ -100,6 +100,7 @@ export default {
         return;
       }
       this.internalNodes.push(node);
+      return node;
     },
     editCurrent() {
       if (this.currentNodes.length === 1) {
